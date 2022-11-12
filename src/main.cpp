@@ -6,6 +6,8 @@ SDL_Window* window;
 SDL_GLContext glContext;
 
 GLuint vertexBufferObjet;
+GLuint vertexArrayObjet;
+GLuint ElementObject;
 
 GLuint shaderProgram;
 
@@ -25,9 +27,6 @@ void Init() {
     int minor = 0;
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &major);
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &minor);
-
-    std::cout << "Major requested: " << major << '\n';
-    std::cout << "Minor requested: " << minor << '\n';
 
     window = SDL_CreateWindow(
         "Nombre de la ventana",
@@ -58,15 +57,41 @@ void PrintRenderInformation() {
 }
 
 void CreateVertexBuffer() {
+    // Se encuentra en la cpu
     float vertices[] = {
+        // x     y     z
+        0.5f,  0.5f,  0.0f, //
         -0.5f, -0.5f, 0.0f, //
         0.5f,  -0.5f, 0.0f, //
         0.0f,  0.5f,  0.0f  //
     };
 
+    uint indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+
+    // Creamos un VAO (vertexArrayObject)
+    glGenVertexArrays(1, &vertexArrayObjet);
+    // Bindeamos el VAO para que guarde la siguiente configuración
+    glBindVertexArray(vertexArrayObjet);
+
+    // Generamos un buffer para guardar los vertices en la GPU
     glGenBuffers(1, &vertexBufferObjet);
+
+    // Enlazamos el GL_ARRAY_BUFFER target con nuestro VBO creado
     glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObjet);
+
+    // Guardamos la data en nuestro buffer VBO
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // Habilitamos los vertexAttributes
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+
+    // Una vez terminamos las configuraciones se desbinda a cada buffer
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void SetUpGraphicsPipeline() {
@@ -123,18 +148,27 @@ void SetUpGraphicsPipeline() {
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+
+    glViewport(0, 0, width, height);
 }
 
 void CleanUp() {
+    glDeleteBuffers(1, &vertexBufferObjet);
+    glDeleteVertexArrays(1, &vertexArrayObjet);
+    glDeleteProgram(shaderProgram);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
 
 bool IsGameRunning() {
-    glViewport(0, 0, width, height);
-
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(shaderProgram);
+    glBindVertexArray(vertexArrayObjet);
+
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) return false;
