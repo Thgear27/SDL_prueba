@@ -16,7 +16,7 @@ Window::~Window() {
 void Window::createWindow() {
     auto subsytem_init = SDL_WasInit(SDL_INIT_EVERYTHING);
     if (!(subsytem_init & SDL_INIT_VIDEO))
-        throw "SDL Video subsystem is not initialized, cannot construct a window";
+        throw std::runtime_error("SDL Video subsystem is not initialized, cannot construct a window");
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);

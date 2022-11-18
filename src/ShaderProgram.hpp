@@ -18,6 +18,7 @@ struct ShaderProgram {
     void loadSource(const std::string& file_name, ShaderType type);
     void createShaderProgram();
     void useProgram();
+    void deleteProgram();
 
     ShaderProgram();
     ~ShaderProgram();

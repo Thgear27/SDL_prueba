@@ -10,13 +10,14 @@ struct VBO {
     inline ~VBO() { 
         if (VBO_obj != 0) {
             glDeleteBuffers(1, &VBO_obj);
-            std::cout << "~VBO() called\n";
+            std::cout << "VBO destroyed\n";
         }
     }
 
     inline void deleteBuffer() {
         if (VBO_obj != 0) {
             glDeleteBuffers(1, &VBO_obj);
+            std::cout << "VBO destroyed\n";
         }
         VBO_obj = 0;
     }
@@ -24,6 +25,7 @@ struct VBO {
     inline void genBuffer() {
         if (VBO_obj != 0) glDeleteBuffers(1, &VBO_obj);
         glGenBuffers(1, &VBO_obj);
+        std::cout << "VBO created\n";
     }
 
     inline void bindBuffer() {

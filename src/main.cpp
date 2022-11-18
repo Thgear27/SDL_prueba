@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_timer.h>
 #include <glad/glad.h>
 #include <iostream>
 #include <stdexcept>
@@ -8,8 +9,15 @@
 #include "BufferObjects/VBO.hpp"
 #include "BufferObjects/EBO.hpp"
 
-VBO g_VBO;
-VAO g_VAO;
+VBO g_VBO1;
+VAO g_VAO1;
+
+VBO g_VBO2;
+VAO g_VAO2;
+
+ShaderProgram shaderProgram1;
+ShaderProgram shaderProgram2;
+
 EBO g_EBO;
 
 constexpr int width  = 800;
@@ -20,8 +28,8 @@ void PrintRenderInformation();
 void CreateVertexSpecification();
 void CleanUp();
 void PreDraw();
-void Draw(VAO& vao_obj);
-bool IsGameRunning(Window& window, ShaderProgram& shader_program);
+void Draw(VAO& vao_obj, int size);
+bool IsGameRunning(Window& window);
 void game();
 
 int main() {
@@ -48,14 +56,17 @@ void game() {
 
     PrintRenderInformation();
 
-    ShaderProgram sptest;
-    sptest.loadSource("resources/fragment.shader", ShaderProgram::FRAGMENT);
-    sptest.loadSource("resources/vertex.shader", ShaderProgram::VERTEX);
-    sptest.createShaderProgram();
+    shaderProgram1.loadSource("resources/fragment.shader", ShaderProgram::FRAGMENT);
+    shaderProgram1.loadSource("resources/vertex.shader", ShaderProgram::VERTEX);
+    shaderProgram1.createShaderProgram();
+
+    shaderProgram2.loadSource("resources/fragment2.shader", ShaderProgram::FRAGMENT);
+    shaderProgram2.loadSource("resources/vertex.shader", ShaderProgram::VERTEX);
+    shaderProgram2.createShaderProgram();
 
     CreateVertexSpecification();
 
-    while (IsGameRunning(myWindow, sptest));
+    while (IsGameRunning(myWindow));
 
     CleanUp();
 }
@@ -74,42 +85,53 @@ void PrintRenderInformation() {
 }
 
 void CreateVertexSpecification() {
-    float vertices[] = {
+    // ESTO ESTÁ EN LA CPU
+    float vertices1[] = {
         // x     y     z
-        0.5f,  0.5f,  0.0f, //
-        0.5f,  -0.5f, 0.0f, //
-        -0.5f, -0.5f, 0.0f, //
-        -0.5f, 0.5f,  0.0f  //
+        0.5f,  0.5f,  0.0f, // 0
+        0.5f,  -0.5f, 0.0f, // 1
+        -0.5f, 0.5f,  0.0f, // 3
     };
 
-    uint indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
+    float vertices2[] = {
+        // x     y     z
+        0.5f,  -0.5f, 0.0f, // 1
+        -0.5f, -0.5f, 0.0f, // 2
+        -0.5f, 0.5f,  0.0f  // 3
     };
 
-    g_VAO.createVAO();
-    g_VBO.genBuffer();
-    g_EBO.genBuffer();
+    // uint indices[] = {
+    //     0, 1, 3, // first triangle
+    //     1, 2, 3  // second triangle
+    // };
 
-    g_VAO.bind(); // To save the configurations
+    g_VAO1.createVAO();
+    g_VBO1.genBuffer();
+    g_VAO1.bind(); // To save the configurations
+    g_VBO1.bindBuffer();
+    g_VBO1.bufferData(sizeof(vertices1), vertices1, GL_STATIC_DRAW);
+    g_VAO1.linkVBO(0);
+    g_VAO1.unBind();
+    g_VBO1.unBind();
 
-    g_VBO.bindBuffer();
-    g_EBO.bindBuffer();
+    g_VAO2.createVAO();
+    g_VAO2.bind();
+    g_VBO2.genBuffer();
+    g_VBO2.bindBuffer();
+    g_VBO2.bufferData(sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+    g_VAO2.linkVBO(0);
+    g_VAO2.unBind();
+    g_VBO2.unBind();
 
-    g_VBO.bufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
-    g_EBO.bufferData(sizeof(indices), indices, GL_STATIC_DRAW);
-
-    g_VAO.linkVBO(0);
-
-    g_VAO.unBind();
-    g_VBO.unBind();
-    g_EBO.unBind();
+    // g_EBO.unBind();
 }
 
 void CleanUp() {
-    g_EBO.deleteBuffer();
-    g_VAO.deleteVAO();
-    g_VBO.deleteBuffer();
+    // g_EBO.deleteBuffer();
+    g_VAO1.deleteVAO();
+    g_VBO1.deleteBuffer();
+    g_VAO2.deleteVAO();
+    g_VBO2.deleteBuffer();
 }
 
 void PreDraw() {
@@ -117,18 +139,14 @@ void PreDraw() {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 }
 
-void Draw(VAO& vao_obj) {
+void Draw(VAO& vao_obj, int size) {
     vao_obj.bind();
-    // glDrawArrays(GL_TRIANGLES, 0, 3);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, size);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     vao_obj.unBind();
 }
 
-bool IsGameRunning(Window& window, ShaderProgram& shader_program) {
-    shader_program.useProgram();
-    PreDraw();
-    Draw(g_VAO);
-
+bool IsGameRunning(Window& window) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) return false;
@@ -144,6 +162,17 @@ bool IsGameRunning(Window& window, ShaderProgram& shader_program) {
             }
         }
     }
+
+    int vertexColorLocation = glGetUniformLocation(shaderProgram1.sp_id, "ourColor");
+    float n = SDL_GetTicks() / 1000.0f;
+    n = (std::sin(n) / 2) + 0.5f;
+    PreDraw();
+    shaderProgram1.useProgram();
+    glUniform4f(vertexColorLocation, n, n, n, 1.0f);
+    Draw(g_VAO1, 3);
+    shaderProgram2.useProgram();
+    Draw(g_VAO2, 3);
+
 
     window.SwapWindow();
     return true;

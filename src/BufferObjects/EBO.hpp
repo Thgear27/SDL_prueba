@@ -10,13 +10,14 @@ struct EBO {
     inline ~EBO() {
         if (EBO_obj != 0) {
             glDeleteBuffers(1, &EBO_obj);
-            std::cout << "~EBO() called\n";
+            std::cout << "EBO destroyed\n";
         }
     }
 
     inline void deleteBuffer() {
         if (EBO_obj != 0) {
             glDeleteBuffers(1, &EBO_obj);
+            std::cout << "EBO destroyed\n";
         }
         EBO_obj = 0;
     }
@@ -24,6 +25,7 @@ struct EBO {
     inline void genBuffer() {
         if (EBO_obj != 0) glDeleteBuffers(1, &EBO_obj);
         glGenBuffers(1, &EBO_obj);
+        std::cout << "EBO created\n";
     }
 
     inline void bindBuffer() {

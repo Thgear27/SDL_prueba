@@ -18,11 +18,13 @@ struct VAO {
     inline void createVAO() {
         if (VAO_obj != 0) glDeleteBuffers(1, &VAO_obj);
         glGenVertexArrays(1, &VAO_obj);
+        std::cout << "VAO created\n";
     }
 
     inline void deleteVAO() {
         if (VAO_obj != 0) {
             glDeleteBuffers(1, &VAO_obj);
+            std::cout << "VAO destroyed\n";
         }
         VAO_obj = 0;
     }
@@ -30,7 +32,7 @@ struct VAO {
     inline ~VAO() {
         if (VAO_obj != 0) {
             glDeleteBuffers(1, &VAO_obj);
-            std::cout << "~VAO() called\n";
+            std::cout << "VAO destroyed\n";
         }
     }
 

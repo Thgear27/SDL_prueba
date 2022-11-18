@@ -6,7 +6,16 @@
 ShaderProgram::ShaderProgram() {}
 
 ShaderProgram::~ShaderProgram() {
-    glDeleteProgram(sp_id);
+    if (sp_id != 0) {
+        glDeleteProgram(sp_id);
+    }
+}
+
+void ShaderProgram::deleteProgram() {
+    if (sp_id != 0) {
+        glDeleteProgram(sp_id);
+    }
+    sp_id = 0;
 }
 
 void ShaderProgram::loadSource(const std::string& file_name, ShaderType type) {
@@ -64,7 +73,7 @@ void ShaderProgram::createShaderProgram() {
     compileShader(vertex_shader);
     compileShader(fragment_shader);
 
-    if (sp_id != 0) // True if no shader program has been created
+    if (sp_id != 0) // True if shader program has been created
         glDeleteProgram(sp_id);
 
     sp_id = glCreateProgram();
