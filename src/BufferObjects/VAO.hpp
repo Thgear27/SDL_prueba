@@ -36,9 +36,9 @@ struct VAO {
         }
     }
 
-    inline void linkVBO(GLuint layout) {
-        glVertexAttribPointer(layout, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(layout);
+    inline void linkVBO(GLuint layout, int size, GLenum type, GLboolean normalized, GLsizei stride, const void* data) {
+        glVertexAttribPointer(layout, size, type, normalized, stride, data);
+        glEnableVertexAttribArray(layout); // layout 0
     }
 };
 

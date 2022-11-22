@@ -1,8 +1,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
+#include <SDL2/SDL_image.h>
 #include <glad/glad.h>
 #include <iostream>
 #include <stdexcept>
+#include "stb_image.hpp"
 #include "Window.hpp"
 #include "ShaderProgram.hpp"
 #include "BufferObjects/VAO.hpp"
@@ -11,14 +13,11 @@
 
 VBO g_VBO1;
 VAO g_VAO1;
-
-VBO g_VBO2;
-VAO g_VAO2;
+EBO g_EBO;
 
 ShaderProgram shaderProgram1;
-ShaderProgram shaderProgram2;
 
-EBO g_EBO;
+int texWidth, texHeight, nrChanels;
 
 constexpr int width  = 800;
 constexpr int height = 640;
@@ -56,13 +55,9 @@ void game() {
 
     PrintRenderInformation();
 
-    shaderProgram1.loadSource("resources/fragment.shader", ShaderProgram::FRAGMENT);
-    shaderProgram1.loadSource("resources/vertex.shader", ShaderProgram::VERTEX);
+    shaderProgram1.loadSource("resources/fragment.frag", ShaderProgram::FRAGMENT);
+    shaderProgram1.loadSource("resources/vertex.vert", ShaderProgram::VERTEX);
     shaderProgram1.createShaderProgram();
-
-    shaderProgram2.loadSource("resources/fragment2.shader", ShaderProgram::FRAGMENT);
-    shaderProgram2.loadSource("resources/vertex.shader", ShaderProgram::VERTEX);
-    shaderProgram2.createShaderProgram();
 
     CreateVertexSpecification();
 
@@ -86,52 +81,52 @@ void PrintRenderInformation() {
 
 void CreateVertexSpecification() {
     // ESTO ESTÁ EN LA CPU
-    float vertices1[] = {
-        // x     y     z
-        0.5f,  0.5f,  0.0f, // 0
-        0.5f,  -0.5f, 0.0f, // 1
-        -0.5f, 0.5f,  0.0f, // 3
+    float vertices[] = {
+        // positions          // colors           // texture coords
+        0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+        0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
     };
 
-    float vertices2[] = {
-        // x     y     z
-        0.5f,  -0.5f, 0.0f, // 1
-        -0.5f, -0.5f, 0.0f, // 2
-        -0.5f, 0.5f,  0.0f  // 3
+    uint indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
     };
 
-    // uint indices[] = {
-    //     0, 1, 3, // first triangle
-    //     1, 2, 3  // second triangle
-    // };
+    u_char* data = stbi_load("resources/img/container.jpg", &texWidth, &texHeight, &nrChanels, 0);;
+    if (data == nullptr) throw std::runtime_error("Can not load the texture img");
+    
+    GLuint texture_id;
+    glGenTextures(1, &texture_id);
 
     g_VAO1.createVAO();
     g_VBO1.genBuffer();
+    g_EBO.genBuffer();
     g_VAO1.bind(); // To save the configurations
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB,GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
     g_VBO1.bindBuffer();
-    g_VBO1.bufferData(sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-    g_VAO1.linkVBO(0);
+    g_EBO.bindBuffer();
+    g_EBO.bufferData(sizeof(indices), indices, GL_STATIC_DRAW);
+    g_VBO1.bufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
+    g_VAO1.linkVBO(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    g_VAO1.linkVBO(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    g_VAO1.linkVBO(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     g_VAO1.unBind();
     g_VBO1.unBind();
-
-    g_VAO2.createVAO();
-    g_VAO2.bind();
-    g_VBO2.genBuffer();
-    g_VBO2.bindBuffer();
-    g_VBO2.bufferData(sizeof(vertices2), vertices2, GL_STATIC_DRAW);
-    g_VAO2.linkVBO(0);
-    g_VAO2.unBind();
-    g_VBO2.unBind();
+    g_EBO.unBind();
 
     // g_EBO.unBind();
+    stbi_image_free(data);
 }
 
 void CleanUp() {
     // g_EBO.deleteBuffer();
     g_VAO1.deleteVAO();
     g_VBO1.deleteBuffer();
-    g_VAO2.deleteVAO();
-    g_VBO2.deleteBuffer();
+    g_EBO.deleteBuffer();
 }
 
 void PreDraw() {
@@ -141,8 +136,8 @@ void PreDraw() {
 
 void Draw(VAO& vao_obj, int size) {
     vao_obj.bind();
-    glDrawArrays(GL_TRIANGLES, 0, size);
-    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    // glDrawArrays(GL_TRIANGLES, 0, size);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     vao_obj.unBind();
 }
 
@@ -163,17 +158,20 @@ bool IsGameRunning(Window& window) {
         }
     }
 
-    int vertexColorLocation = glGetUniformLocation(shaderProgram1.sp_id, "ourColor");
-    float n = SDL_GetTicks() / 1000.0f;
-    n = (std::sin(n) / 2) + 0.5f;
+    // float n = SDL_GetTicks() / 1000.0f;
+    // n = (std::sin(n) / 2);
     PreDraw();
     shaderProgram1.useProgram();
-    glUniform4f(vertexColorLocation, n, n, n, 1.0f);
+    // glUniform1f(glGetUniformLocation(shaderProgram1.sp_id, "offset"), n);
     Draw(g_VAO1, 3);
-    shaderProgram2.useProgram();
-    Draw(g_VAO2, 3);
-
 
     window.SwapWindow();
     return true;
 }
+
+// TODO:
+/***
+ * Abstract texture class
+ * add uniforms features to shaderProgram class
+ * SI
+*/
