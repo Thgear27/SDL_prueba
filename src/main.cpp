@@ -10,10 +10,7 @@
 #include "BufferObjects/VAO.hpp"
 #include "BufferObjects/VBO.hpp"
 #include "BufferObjects/EBO.hpp"
-
-VBO g_VBO1;
-VAO g_VAO1;
-EBO g_EBO;
+#include "Buffers/VertexArray.hpp"
 
 ShaderProgram shaderProgram1;
 
@@ -24,11 +21,11 @@ constexpr int height = 640;
 
 void LoadGLFunctions();
 void PrintRenderInformation();
-void CreateVertexSpecification();
+void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffer& ebo);
 void CleanUp();
 void PreDraw();
-void Draw(VAO& vao_obj, int size);
-bool IsGameRunning(Window& window);
+void Draw(VertexArray& vao_obj, int size);
+bool IsGameRunning(Window& window, VertexArray& vao);
 void game();
 
 int main() {
@@ -52,18 +49,44 @@ void game() {
     myWindow.createGLContext();
 
     LoadGLFunctions();
-
     PrintRenderInformation();
 
     shaderProgram1.loadSource("resources/fragment.frag", ShaderProgram::FRAGMENT);
     shaderProgram1.loadSource("resources/vertex.vert", ShaderProgram::VERTEX);
     shaderProgram1.createShaderProgram();
 
-    CreateVertexSpecification();
+    VertexBuffer vbo;
+    ElementBuffer ebo;
+    VertexArray vao{ vbo, ebo };
 
-    while (IsGameRunning(myWindow));
+    CreateVertexSpecification(vao, vbo, ebo);
+
+    while (IsGameRunning(myWindow, vao));
 
     CleanUp();
+}
+
+void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffer& ebo) {
+    float vertices[] = {
+        // positions          // colors           // texture coords
+         0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+    };
+
+    uint indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+
+    vbo.loadData(sizeof(vertices), vertices, GL_STATIC_DRAW);
+    vbo.setVertexAttribCount(3);
+    vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 3);
+    vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 3);
+    vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 2);
+    ebo.loadData(sizeof(indices), indices, GL_STATIC_DRAW);
+    vao.linkBuffers();
 }
 
 void LoadGLFunctions() {
@@ -79,54 +102,7 @@ void PrintRenderInformation() {
     std::cout << "SHADING LENGUAGE VERSION:" << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n';
 }
 
-void CreateVertexSpecification() {
-    // ESTO ESTÁ EN LA CPU
-    float vertices[] = {
-        // positions          // colors           // texture coords
-        0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-        0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
-    };
-
-    uint indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
-
-    u_char* data = stbi_load("resources/img/container.jpg", &texWidth, &texHeight, &nrChanels, 0);;
-    if (data == nullptr) throw std::runtime_error("Can not load the texture img");
-    
-    GLuint texture_id;
-    glGenTextures(1, &texture_id);
-
-    g_VAO1.createVAO();
-    g_VBO1.genBuffer();
-    g_EBO.genBuffer();
-    g_VAO1.bind(); // To save the configurations
-    glBindTexture(GL_TEXTURE_2D, texture_id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB,GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    g_VBO1.bindBuffer();
-    g_EBO.bindBuffer();
-    g_EBO.bufferData(sizeof(indices), indices, GL_STATIC_DRAW);
-    g_VBO1.bufferData(sizeof(vertices), vertices, GL_STATIC_DRAW);
-    g_VAO1.linkVBO(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    g_VAO1.linkVBO(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    g_VAO1.linkVBO(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    g_VAO1.unBind();
-    g_VBO1.unBind();
-    g_EBO.unBind();
-
-    // g_EBO.unBind();
-    stbi_image_free(data);
-}
-
 void CleanUp() {
-    // g_EBO.deleteBuffer();
-    g_VAO1.deleteVAO();
-    g_VBO1.deleteBuffer();
-    g_EBO.deleteBuffer();
 }
 
 void PreDraw() {
@@ -134,14 +110,14 @@ void PreDraw() {
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 }
 
-void Draw(VAO& vao_obj, int size) {
+void Draw(VertexArray& vao_obj, int size) {
     vao_obj.bind();
     // glDrawArrays(GL_TRIANGLES, 0, size);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     vao_obj.unBind();
 }
 
-bool IsGameRunning(Window& window) {
+bool IsGameRunning(Window& window, VertexArray& vao) {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) return false;
@@ -163,7 +139,7 @@ bool IsGameRunning(Window& window) {
     PreDraw();
     shaderProgram1.useProgram();
     // glUniform1f(glGetUniformLocation(shaderProgram1.sp_id, "offset"), n);
-    Draw(g_VAO1, 3);
+    Draw(vao, 3);
 
     window.SwapWindow();
     return true;
