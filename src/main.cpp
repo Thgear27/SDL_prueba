@@ -7,9 +7,6 @@
 #include "stb_image.hpp"
 #include "Window.hpp"
 #include "ShaderProgram.hpp"
-#include "BufferObjects/VAO.hpp"
-#include "BufferObjects/VBO.hpp"
-#include "BufferObjects/EBO.hpp"
 #include "Buffers/VertexArray.hpp"
 
 ShaderProgram shaderProgram1;
