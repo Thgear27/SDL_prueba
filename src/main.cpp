@@ -54,7 +54,7 @@ void game() {
 
     VertexBuffer vbo;
     ElementBuffer ebo;
-    VertexArray vao{ vbo, ebo };
+    VertexArray vao;
 
     CreateVertexSpecification(vao, vbo, ebo);
 
@@ -65,7 +65,7 @@ void game() {
 
 void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffer& ebo) {
     float vertices[] = {
-        // positions          // colors           // texture coords
+        // positions         // colors           // texture coords
          0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
          0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
         -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
@@ -83,6 +83,8 @@ void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffe
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 3);
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 2);
     ebo.loadData(sizeof(indices), indices, GL_STATIC_DRAW);
+    vao.addVertexBuffer(&vbo);
+    vao.addElementBuffer(&ebo);
     vao.linkBuffers();
 }
 

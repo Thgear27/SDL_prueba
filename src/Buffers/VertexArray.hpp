@@ -7,22 +7,24 @@
 
 class VertexArray {
 public:
-    VertexArray() = delete;
     VertexArray(const VertexArray&) = delete;
     VertexArray& operator=(const VertexArray&) = delete;
 
-    VertexArray(VertexBuffer& vbo, ElementBuffer& ebo);
+    VertexArray(VertexBuffer* vbo, ElementBuffer* ebo);
+    VertexArray();
     ~VertexArray();
 
     void bind();
     void unBind();
     void deleteVertexArray();
+    void addVertexBuffer(VertexBuffer* vbo_ptr);
+    void addElementBuffer(ElementBuffer* ebo_ptr);
     void linkBuffers();
 
     GLuint Id = 0;
 
-    VertexBuffer& m_vbo;
-    ElementBuffer& m_ebo;
+    VertexBuffer* m_vbo = nullptr;
+    ElementBuffer* m_ebo = nullptr;
 };
 
 #endif // VERTEX_ARRAY_HPP
