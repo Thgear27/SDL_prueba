@@ -6,16 +6,24 @@
 ShaderProgram::ShaderProgram() {}
 
 ShaderProgram::~ShaderProgram() {
-    if (sp_id != 0) {
-        glDeleteProgram(sp_id);
+    if (Id != 0) {
+        glDeleteProgram(Id);
     }
 }
 
 void ShaderProgram::deleteProgram() {
-    if (sp_id != 0) {
-        glDeleteProgram(sp_id);
+    if (Id != 0) {
+        glDeleteProgram(Id);
     }
-    sp_id = 0;
+    Id = 0;
+}
+
+void ShaderProgram::setInt(const std::string& name, int value) {
+    glUniform1i(glGetUniformLocation(Id, name.c_str()), value);
+}
+
+void ShaderProgram::setFloat(const std::string& name, float value) {
+    glUniform1f(glGetUniformLocation(Id, name.c_str()), value);
 }
 
 void ShaderProgram::loadSource(const std::string& file_name, ShaderType type) {
@@ -73,18 +81,18 @@ void ShaderProgram::createShaderProgram() {
     compileShader(vertex_shader);
     compileShader(fragment_shader);
 
-    if (sp_id != 0) // True if shader program has been created
-        glDeleteProgram(sp_id);
+    if (Id != 0) // True if shader program has been created
+        glDeleteProgram(Id);
 
-    sp_id = glCreateProgram();
-    glAttachShader(sp_id, vertex_shader);
-    glAttachShader(sp_id, fragment_shader);
-    linkShaderProgram(sp_id);
+    Id = glCreateProgram();
+    glAttachShader(Id, vertex_shader);
+    glAttachShader(Id, fragment_shader);
+    linkShaderProgram(Id);
 
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 }
 
 void ShaderProgram::useProgram() {
-    glUseProgram(sp_id);
+    glUseProgram(Id);
 }

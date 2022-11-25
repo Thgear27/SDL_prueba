@@ -1,17 +1,18 @@
+#include <glad/glad.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_image.h>
-#include <glad/glad.h>
 #include <iostream>
 #include <stdexcept>
 #include "stb_image.hpp"
 #include "Window.hpp"
 #include "ShaderProgram.hpp"
 #include "Buffers/VertexArray.hpp"
+#include "Texture2D.hpp"
 
 ShaderProgram shaderProgram1;
-
-int texWidth, texHeight, nrChanels;
+Texture2D texture2d1;
+Texture2D texture2d2;
 
 constexpr int width  = 800;
 constexpr int height = 640;
@@ -36,6 +37,7 @@ int main() {
     } catch(std::exception const& e) {
         std::cout << "[ERROR]: " << e.what() << '\n';
     }
+
     SDL_Quit();
 }
 
@@ -66,16 +68,24 @@ void game() {
 void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffer& ebo) {
     float vertices[] = {
         // positions         // colors           // texture coords
-         0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+         0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   0.55f, 0.55f,   // top right
+         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   0.55f, 0.45f,   // bottom right
+        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.45f, 0.45f,   // bottom left
+        -0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.45f, 0.55f    // top left 
     };
 
     uint indices[] = {
         0, 1, 3, // first triangle
         1, 2, 3  // second triangle
     };
+
+    stbi_set_flip_vertically_on_load(true);
+
+    texture2d1.loadImageData("resources/img/container.jpg", 0, GL_RGB, GL_RGB);
+    texture2d2.loadImageData("resources/img/awesomeface.png", 0, GL_RGBA, GL_RGBA);
+
+    texture2d1.setTextureUnit(0);
+    texture2d2.setTextureUnit(1);
 
     vbo.loadData(sizeof(vertices), vertices, GL_STATIC_DRAW);
     vbo.setVertexAttribCount(3);
@@ -133,11 +143,13 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
         }
     }
 
-    // float n = SDL_GetTicks() / 1000.0f;
-    // n = (std::sin(n) / 2);
+    float n = SDL_GetTicks() / 1000.0f;
+    n = (std::sin(n) / 2) + 0.5f;
     PreDraw();
     shaderProgram1.useProgram();
-    // glUniform1f(glGetUniformLocation(shaderProgram1.sp_id, "offset"), n);
+    shaderProgram1.setInt("texture1", 0);
+    shaderProgram1.setInt("texture1", 1);
+    shaderProgram1.setFloat("si", n);
     Draw(vao, 3);
 
     window.SwapWindow();
