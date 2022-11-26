@@ -4,6 +4,9 @@
 #include <SDL2/SDL_image.h>
 #include <iostream>
 #include <stdexcept>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "stb_image.hpp"
 #include "Window.hpp"
 #include "ShaderProgram.hpp"
@@ -60,6 +63,7 @@ void game() {
 
     CreateVertexSpecification(vao, vbo, ebo);
 
+    glEnable(GL_DEPTH_TEST);
     while (IsGameRunning(myWindow, vao));
 
     CleanUp();
@@ -67,11 +71,47 @@ void game() {
 
 void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffer& ebo) {
     float vertices[] = {
-        // positions         // colors           // texture coords
-         0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   0.55f, 0.55f,   // top right
-         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   0.55f, 0.45f,   // bottom right
-        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,   0.45f, 0.45f,   // bottom left
-        -0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f,   0.45f, 0.55f    // top left 
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+       -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
     uint indices[] = {
@@ -89,7 +129,6 @@ void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffe
 
     vbo.loadData(sizeof(vertices), vertices, GL_STATIC_DRAW);
     vbo.setVertexAttribCount(3);
-    vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 3);
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 3);
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 2);
     ebo.loadData(sizeof(indices), indices, GL_STATIC_DRAW);
@@ -121,12 +160,15 @@ void PreDraw() {
 
 void Draw(VertexArray& vao_obj, int size) {
     vao_obj.bind();
-    // glDrawArrays(GL_TRIANGLES, 0, size);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, size);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     vao_obj.unBind();
 }
 
 bool IsGameRunning(Window& window, VertexArray& vao) {
+    static float f_z = -1.0f;
+    static float f_x = -1.0f;
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) return false;
@@ -140,8 +182,25 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
             if (event.key.keysym.sym == SDLK_e) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
+            if (event.key.keysym.sym == SDLK_UP)
+                f_z += 0.1f;
+            if (event.key.keysym.sym == SDLK_DOWN)
+                f_z -= 0.1f;
+            if (event.key.keysym.sym == SDLK_LEFT)
+                f_x -= 0.1f;
+            if (event.key.keysym.sym == SDLK_RIGHT)
+                f_x += 0.1f;
         }
     }
+
+    glm::mat4 model = glm::mat4{ 1.0f };
+    model = glm::rotate(model, (float)SDL_GetTicks() / 1000.0f, glm::vec3{ 1.0f, 1.0f, 0.0f });
+
+    glm::mat4 view = glm::mat4{ 1.0f };
+    view = glm::translate(view, glm::vec3{ f_x, 0.0f, f_z });
+
+    glm::mat projection = glm::mat4{ 1.0f };
+    projection = glm::perspective(glm::radians(89.0f), 800.0f / 600.0f, 0.2f, 100.0f);
 
     float n = SDL_GetTicks() / 1000.0f;
     n = (std::sin(n) / 2) + 0.5f;
@@ -149,8 +208,11 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
     shaderProgram1.useProgram();
     shaderProgram1.setInt("texture1", 0);
     shaderProgram1.setInt("texture1", 1);
-    shaderProgram1.setFloat("si", n);
-    Draw(vao, 3);
+    shaderProgram1.setFloat("si", 0.2);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "model"), 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    Draw(vao, 36);
 
     window.SwapWindow();
     return true;
