@@ -47,6 +47,7 @@ void VertexBuffer::setVertexAttribCount(int count) {
 void VertexBuffer::push_VertexAttribLayout(GLuint type, GLuint normalized, GLuint count) {
     m_AttribsLayouts.push_back({ type, normalized, count });
     m_stride += count * getTypeSize(type);
+    m_vertexAttribCount++;
 }
 
 void VertexBuffer::bind() {

@@ -31,7 +31,7 @@ public:
 
     GLuint Id = 0;
     int m_stride;
-    int m_vertexAttribCount;
+    int m_vertexAttribCount = 0;
     std::vector<VertexAttribLayout> m_AttribsLayouts;
 };
 

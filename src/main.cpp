@@ -1,21 +1,23 @@
-#include <glad/glad.h>
+#include "Buffers/VertexArray.hpp"
+#include "ShaderProgram.hpp"
+#include "Texture2D.hpp"
+#include "Window.hpp"
+#include "stb_image.hpp"
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_timer.h>
 #include <SDL2/SDL_image.h>
-#include <iostream>
-#include <stdexcept>
+#include <SDL2/SDL_timer.h>
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "stb_image.hpp"
-#include "Window.hpp"
-#include "ShaderProgram.hpp"
-#include "Buffers/VertexArray.hpp"
-#include "Texture2D.hpp"
+#include <iostream>
+#include <stdexcept>
 
 ShaderProgram shaderProgram1;
 Texture2D texture2d1;
 Texture2D texture2d2;
+
+const Uint8* keyState;
 
 constexpr int width  = 800;
 constexpr int height = 640;
@@ -37,7 +39,7 @@ int main() {
 
     try {
         game();
-    } catch(std::exception const& e) {
+    } catch (std::exception const& e) {
         std::cout << "[ERROR]: " << e.what() << '\n';
     }
 
@@ -46,12 +48,14 @@ int main() {
 
 // Functions definitions
 void game() {
-    Window myWindow{ width, height, "OpenGL window" }; 
+    Window myWindow { width, height, "OpenGL window" };
     myWindow.createWindow();
     myWindow.createGLContext();
 
     LoadGLFunctions();
     PrintRenderInformation();
+
+    keyState = SDL_GetKeyboardState(nullptr);
 
     shaderProgram1.loadSource("resources/fragment.frag", ShaderProgram::FRAGMENT);
     shaderProgram1.loadSource("resources/vertex.vert", ShaderProgram::VERTEX);
@@ -64,54 +68,55 @@ void game() {
     CreateVertexSpecification(vao, vbo, ebo);
 
     glEnable(GL_DEPTH_TEST);
-    while (IsGameRunning(myWindow, vao));
+    while (IsGameRunning(myWindow, vao))
+        ;
 
     CleanUp();
 }
 
 void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffer& ebo) {
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, //
+        0.5f,  -0.5f, -0.5f, 1.0f, 0.0f, //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, //
 
-       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-       -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-       -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, //
+        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f, //
+        -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, //
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, //
+        -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, //
 
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
+        0.5f,  -0.5f, -0.5f, 1.0f, 1.0f, //
+        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, //
+        0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, //
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, //
+        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, //
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, //
+        0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f, //
+        -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, //
+        -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f  //
     };
 
     uint indices[] = {
@@ -128,13 +133,13 @@ void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffe
     texture2d2.setTextureUnit(1);
 
     vbo.loadData(sizeof(vertices), vertices, GL_STATIC_DRAW);
-    vbo.setVertexAttribCount(3);
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 3);
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 2);
     ebo.loadData(sizeof(indices), indices, GL_STATIC_DRAW);
     vao.addVertexBuffer(&vbo);
     vao.addElementBuffer(&ebo);
     vao.linkBuffers();
+    glViewport(0, 0, width, height);
 }
 
 void LoadGLFunctions() {
@@ -150,8 +155,7 @@ void PrintRenderInformation() {
     std::cout << "SHADING LENGUAGE VERSION:" << glGetString(GL_SHADING_LANGUAGE_VERSION) << '\n';
 }
 
-void CleanUp() {
-}
+void CleanUp() {}
 
 void PreDraw() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -182,36 +186,34 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
             if (event.key.keysym.sym == SDLK_e) {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
-            if (event.key.keysym.sym == SDLK_UP)
-                f_z += 0.1f;
-            if (event.key.keysym.sym == SDLK_DOWN)
-                f_z -= 0.1f;
-            if (event.key.keysym.sym == SDLK_LEFT)
-                f_x -= 0.1f;
-            if (event.key.keysym.sym == SDLK_RIGHT)
-                f_x += 0.1f;
         }
     }
+    if (keyState[SDL_SCANCODE_UP] == 1) f_z += 0.1f;
+    if (keyState[SDL_SCANCODE_DOWN] == 1) f_z -= 0.1f;
+    if (keyState[SDL_SCANCODE_LEFT] == 1) f_x -= 0.1f;
+    if (keyState[SDL_SCANCODE_RIGHT] == 1) f_x += 0.1f;
 
-    glm::mat4 model = glm::mat4{ 1.0f };
-    model = glm::rotate(model, (float)SDL_GetTicks() / 1000.0f, glm::vec3{ 1.0f, 1.0f, 0.0f });
+    glm::mat4 model = glm::mat4 { 1.0f };
+    model           = glm::rotate(model, (float)SDL_GetTicks() / 1000.0f, glm::vec3 { 0.0f, 1.0f, 1.0f });
 
-    glm::mat4 view = glm::mat4{ 1.0f };
-    view = glm::translate(view, glm::vec3{ f_x, 0.0f, f_z });
+    glm::mat4 view = glm::mat4 { 1.0f };
+    view           = glm::translate(view, glm::vec3 { f_x, 0.0f, f_z });
 
-    glm::mat projection = glm::mat4{ 1.0f };
-    projection = glm::perspective(glm::radians(89.0f), 800.0f / 600.0f, 0.2f, 100.0f);
+    glm::mat projection = glm::mat4 { 1.0f };
+    projection          = glm::perspective(glm::radians(70.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
     float n = SDL_GetTicks() / 1000.0f;
-    n = (std::sin(n) / 2) + 0.5f;
+    n       = (std::sin(n) / 2) + 0.5f;
     PreDraw();
     shaderProgram1.useProgram();
     shaderProgram1.setInt("texture1", 0);
     shaderProgram1.setInt("texture1", 1);
     shaderProgram1.setFloat("si", 0.2);
+
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "model"), 1, GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "view"), 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
     Draw(vao, 36);
 
     window.SwapWindow();
@@ -220,7 +222,5 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
 
 // TODO:
 /***
- * Abstract texture class
  * add uniforms features to shaderProgram class
- * SI
-*/
+ */
