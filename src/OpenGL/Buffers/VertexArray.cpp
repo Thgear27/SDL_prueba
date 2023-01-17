@@ -27,10 +27,10 @@ void VertexArray::linkBuffers() {
             m_vbo->m_AttribsLayouts[i].type,
             m_vbo->m_AttribsLayouts[i].normalized,
             m_vbo->m_stride,
-            (void*)(offset * sizeof(float))
+            (const void*)(std::size_t)(offset)
         );
         glEnableVertexAttribArray(i);
-        offset += m_vbo->m_AttribsLayouts[i].count;
+        offset += m_vbo->m_AttribsLayouts[i].count * m_vbo->getTypeSize(m_vbo->m_AttribsLayouts[i].type);
     }
     glBindVertexArray(0);
 }
