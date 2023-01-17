@@ -7,6 +7,7 @@
 
 class VertexBuffer {
 private:
+    // Especificación de un "vertex attribute"
     struct VertexAttribLayout{
         GLuint type;
         GLuint normalized;

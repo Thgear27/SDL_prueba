@@ -1,8 +1,8 @@
-#include "Buffers/VertexArray.hpp"
-#include "ShaderProgram.hpp"
-#include "Texture2D.hpp"
+#include "OpenGL/Buffers/VertexArray.hpp"
+#include "OpenGL/ShaderProgram.hpp"
+#include "OpenGL/Texture2D.hpp"
 #include "Window.hpp"
-#include "stb_image.hpp"
+#include "OpenGL/stb_image.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
@@ -200,7 +200,7 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
     view           = glm::translate(view, glm::vec3 { f_x, 0.0f, f_z });
 
     glm::mat projection = glm::mat4 { 1.0f };
-    projection          = glm::perspective(glm::radians(70.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    projection          = glm::perspective(glm::radians(70.0f), 800.0f / 600.0f, 0.3f, 100.0f);
 
     float n = SDL_GetTicks() / 1000.0f;
     n       = (std::sin(n) / 2) + 0.5f;
