@@ -2,6 +2,7 @@
 #define ELEMENT_BUFFER_HPP
 
 #include <glad/glad.h>
+#include <../GLerror.hpp>
 
 class ElementBuffer {
 public:

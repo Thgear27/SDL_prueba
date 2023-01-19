@@ -1,8 +1,9 @@
 #include "OpenGL/Buffers/VertexArray.hpp"
+#include "OpenGL/GLerror.hpp"
 #include "OpenGL/ShaderProgram.hpp"
 #include "OpenGL/Texture2D.hpp"
-#include "Window.hpp"
 #include "OpenGL/stb_image.hpp"
+#include "Window.hpp"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_timer.h>
@@ -67,7 +68,7 @@ void game() {
 
     CreateVertexSpecification(vao, vbo, ebo);
 
-    glEnable(GL_DEPTH_TEST);
+    GLCall(glEnable(GL_DEPTH_TEST));
     while (IsGameRunning(myWindow, vao))
         ;
 
@@ -139,7 +140,7 @@ void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffe
     vao.addVertexBuffer(&vbo);
     vao.addElementBuffer(&ebo);
     vao.linkBuffers();
-    glViewport(0, 0, width, height);
+    GLCall(glViewport(0, 0, width, height));
 }
 
 void LoadGLFunctions() {
@@ -158,13 +159,13 @@ void PrintRenderInformation() {
 void CleanUp() {}
 
 void PreDraw() {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    GLCall(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+    GLCall(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 }
 
 void Draw(VertexArray& vao_obj, int size) {
     vao_obj.bind();
-    glDrawArrays(GL_TRIANGLES, 0, size);
+    GLCall(glDrawArrays(GL_TRIANGLES, 0, size));
     // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     vao_obj.unBind();
 }
@@ -181,20 +182,20 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
                 return false;
             }
             if (event.key.keysym.sym == SDLK_r) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
             }
             if (event.key.keysym.sym == SDLK_e) {
-                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
             }
         }
     }
+
     if (keyState[SDL_SCANCODE_UP] == 1) f_z += 0.1f;
     if (keyState[SDL_SCANCODE_DOWN] == 1) f_z -= 0.1f;
     if (keyState[SDL_SCANCODE_LEFT] == 1) f_x -= 0.1f;
     if (keyState[SDL_SCANCODE_RIGHT] == 1) f_x += 0.1f;
 
-    glm::mat4 model = glm::mat4 { 1.0f };
-    model           = glm::rotate(model, (float)SDL_GetTicks() / 1000.0f, glm::vec3 { 0.0f, 1.0f, 1.0f });
+    float n = SDL_GetTicks() / 1000.0f;
 
     glm::mat4 view = glm::mat4 { 1.0f };
     view           = glm::translate(view, glm::vec3 { f_x, 0.0f, f_z });
@@ -202,19 +203,30 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
     glm::mat projection = glm::mat4 { 1.0f };
     projection          = glm::perspective(glm::radians(70.0f), 800.0f / 600.0f, 0.3f, 100.0f);
 
-    float n = SDL_GetTicks() / 1000.0f;
-    n       = (std::sin(n) / 2) + 0.5f;
-    PreDraw();
+    glm::vec3 cubePositions[] = { glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+                                  glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+                                  glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+                                  glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+                                  glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f) };
+
     shaderProgram1.useProgram();
     shaderProgram1.setInt("texture1", 0);
     shaderProgram1.setInt("texture1", 1);
-    shaderProgram1.setFloat("si", 0.2);
+    shaderProgram1.setFloat("si", 1);
+    shaderProgram1.setMat4("view", view);
+    shaderProgram1.setMat4("projection", projection);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "model"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "view"), 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram1.Id, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    PreDraw();
+    for (int i = 0; i < 10; i++) {
+        glm::mat4 model = glm::mat4 { 1.0f };
+        model           = glm::translate(model, cubePositions[i]);
+        model           = glm::rotate(model, n * ((i + 1) / 8.0f), glm::vec3 { 1.0f, 0.3f, 0.5f });
+        // float angle     = i * 20.0f;
 
-    Draw(vao, 36);
+        shaderProgram1.setMat4("model", model);
+
+        Draw(vao, 36);
+    }
 
     window.SwapWindow();
     return true;
