@@ -1,13 +1,13 @@
 #include "ElementBuffer.hpp"
 
 ElementBuffer::ElementBuffer(GLsizeiptr size, const void* data, GLenum usage) {
-    GLCall(glGenBuffers(1, &Id));
-    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Id));
-    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, usage));
+    glGenBuffers(1, &Id);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, Id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, usage);
 }
 
 ElementBuffer::ElementBuffer() {
-    GLCall(glGenBuffers(1, &Id));
+    glGenBuffers(1, &Id);
 }
 
 void ElementBuffer::loadData(GLsizeiptr size, const void* data, GLenum usage) {

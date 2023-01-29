@@ -173,6 +173,7 @@ void Draw(VertexArray& vao_obj, int size) {
 bool IsGameRunning(Window& window, VertexArray& vao) {
     static float f_z = -1.0f;
     static float f_x = -1.0f;
+    static float f_y = -1.0f;
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -190,15 +191,17 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
         }
     }
 
-    if (keyState[SDL_SCANCODE_UP] == 1) f_z += 0.1f;
-    if (keyState[SDL_SCANCODE_DOWN] == 1) f_z -= 0.1f;
-    if (keyState[SDL_SCANCODE_LEFT] == 1) f_x -= 0.1f;
-    if (keyState[SDL_SCANCODE_RIGHT] == 1) f_x += 0.1f;
+    if (keyState[SDL_SCANCODE_W] == 1) f_z += 0.1f;
+    if (keyState[SDL_SCANCODE_S] == 1) f_z -= 0.1f;
+    if (keyState[SDL_SCANCODE_A] == 1) f_x += 0.1f;
+    if (keyState[SDL_SCANCODE_D] == 1) f_x -= 0.1f;
+    if (keyState[SDL_SCANCODE_LSHIFT] == 1) f_y += 0.1f;
+    if (keyState[SDL_SCANCODE_SPACE] == 1) f_y -= 0.1f;
 
     float n = SDL_GetTicks() / 1000.0f;
 
     glm::mat4 view = glm::mat4 { 1.0f };
-    view           = glm::translate(view, glm::vec3 { f_x, 0.0f, f_z });
+    view           = glm::translate(view, glm::vec3 { f_x, f_y, f_z });
 
     glm::mat projection = glm::mat4 { 1.0f };
     projection          = glm::perspective(glm::radians(70.0f), 800.0f / 600.0f, 0.3f, 100.0f);
@@ -210,9 +213,9 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
                                   glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f) };
 
     shaderProgram1.useProgram();
-    shaderProgram1.setInt("texture1", 0);
+    shaderProgram1.setInt("texture2", 0);
     shaderProgram1.setInt("texture1", 1);
-    shaderProgram1.setFloat("si", 1);
+    shaderProgram1.setFloat("si", 0.5f);
     shaderProgram1.setMat4("view", view);
     shaderProgram1.setMat4("projection", projection);
 
