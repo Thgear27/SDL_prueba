@@ -1,3 +1,4 @@
+#include "Camera.hpp"
 #include "OpenGL/Buffers/VertexArray.hpp"
 #include "OpenGL/GLerror.hpp"
 #include "OpenGL/ShaderProgram.hpp"
@@ -20,8 +21,10 @@ Texture2D texture2d2;
 
 const Uint8* keyState;
 
-constexpr int width  = 800;
-constexpr int height = 640;
+constexpr int width  = 1000;
+constexpr int height = 800;
+
+float deltaTime = 0;
 
 void LoadGLFunctions();
 void PrintRenderInformation();
@@ -29,7 +32,7 @@ void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffe
 void CleanUp();
 void PreDraw();
 void Draw(VertexArray& vao_obj, int size);
-bool IsGameRunning(Window& window, VertexArray& vao);
+bool IsGameRunning(Window& window, VertexArray& vao, Camera& camera);
 void game();
 
 int main() {
@@ -66,10 +69,12 @@ void game() {
     ElementBuffer ebo;
     VertexArray vao;
 
+    Camera camera;
+
     CreateVertexSpecification(vao, vbo, ebo);
 
     GLCall(glEnable(GL_DEPTH_TEST));
-    while (IsGameRunning(myWindow, vao))
+    while (IsGameRunning(myWindow, vao, camera))
         ;
 
     CleanUp();
@@ -170,10 +175,29 @@ void Draw(VertexArray& vao_obj, int size) {
     vao_obj.unBind();
 }
 
-bool IsGameRunning(Window& window, VertexArray& vao) {
-    static float f_z = -1.0f;
-    static float f_x = -1.0f;
-    static float f_y = -1.0f;
+void handleInput(Camera& camera) {
+    if (keyState[SDL_SCANCODE_W] == 1) camera.translate(Camera::Direction::FRONT);
+    if (keyState[SDL_SCANCODE_S] == 1) camera.translate(Camera::Direction::BACK);
+    if (keyState[SDL_SCANCODE_A] == 1) camera.translate(Camera::Direction::LEFT);
+    if (keyState[SDL_SCANCODE_D] == 1) camera.translate(Camera::Direction::RIGTH);
+    if (keyState[SDL_SCANCODE_LSHIFT] == 1) camera.translate(Camera::Direction::DOWN);
+    if (keyState[SDL_SCANCODE_SPACE] == 1) camera.translate(Camera::Direction::UP);
+
+    if (keyState[SDL_SCANCODE_UP] == 1) camera.processMouseOffsets(0, 10);
+    if (keyState[SDL_SCANCODE_RIGHT] == 1) camera.processMouseOffsets(10, 0);
+    if (keyState[SDL_SCANCODE_LEFT] == 1) camera.processMouseOffsets(-10, 0);
+    if (keyState[SDL_SCANCODE_DOWN] == 1) camera.processMouseOffsets(0, -10);
+
+    if (keyState[SDL_SCANCODE_R] == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if (keyState[SDL_SCANCODE_E] == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+bool IsGameRunning(Window& window, VertexArray& vao, Camera& camera) {
+    static float lastFrame    = 0.0f;
+    static float currentFrame = SDL_GetTicks64();
+    currentFrame              = SDL_GetTicks64();
+    deltaTime                 = (currentFrame - lastFrame) / 1000;
+    lastFrame                 = currentFrame;
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -182,29 +206,19 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
             if (event.key.keysym.sym == SDLK_ESCAPE) {
                 return false;
             }
-            if (event.key.keysym.sym == SDLK_r) {
-                GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
-            }
-            if (event.key.keysym.sym == SDLK_e) {
-                GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-            }
         }
     }
 
-    if (keyState[SDL_SCANCODE_W] == 1) f_z += 0.1f;
-    if (keyState[SDL_SCANCODE_S] == 1) f_z -= 0.1f;
-    if (keyState[SDL_SCANCODE_A] == 1) f_x += 0.1f;
-    if (keyState[SDL_SCANCODE_D] == 1) f_x -= 0.1f;
-    if (keyState[SDL_SCANCODE_LSHIFT] == 1) f_y += 0.1f;
-    if (keyState[SDL_SCANCODE_SPACE] == 1) f_y -= 0.1f;
+    handleInput(camera);
 
     float n = SDL_GetTicks() / 1000.0f;
 
-    glm::mat4 view = glm::mat4 { 1.0f };
-    view           = glm::translate(view, glm::vec3 { f_x, f_y, f_z });
-
     glm::mat projection = glm::mat4 { 1.0f };
     projection          = glm::perspective(glm::radians(70.0f), 800.0f / 600.0f, 0.3f, 100.0f);
+
+    // // glm::mat view  = glm::lookAt(glm::vec3 { 0, -1.0f, 0 }, glm::vec3 { 0, 0, 0 }, glm::vec3 { 0, 1.0f, 0 });
+    // glm::mat4 view = glm::mat4 { 1.0f };
+    // view           = glm::translate(view, glm::vec3 { 0, 0, -10 });
 
     glm::vec3 cubePositions[] = { glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
                                   glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -216,7 +230,7 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
     shaderProgram1.setInt("texture2", 0);
     shaderProgram1.setInt("texture1", 1);
     shaderProgram1.setFloat("si", 0.5f);
-    shaderProgram1.setMat4("view", view);
+    shaderProgram1.setMat4("view", camera.getViewMatrix());
     shaderProgram1.setMat4("projection", projection);
 
     PreDraw();
@@ -227,7 +241,6 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
         // float angle     = i * 20.0f;
 
         shaderProgram1.setMat4("model", model);
-
         Draw(vao, 36);
     }
 
@@ -237,5 +250,5 @@ bool IsGameRunning(Window& window, VertexArray& vao) {
 
 // TODO:
 /***
- * add uniforms features to shaderProgram class
+ * Add a camera system
  */
