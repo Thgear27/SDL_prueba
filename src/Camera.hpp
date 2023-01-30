@@ -6,10 +6,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // initial values
-constexpr float INITIAL_YAW   = -90.0f;
-constexpr float INITIAL_PITCH = 0.0f;
-constexpr float SPEED         = 4.5f;
-constexpr float SENSITIVITY   = 0.1f;
+constexpr float INITIAL_YAW         = -90.0f;
+constexpr float INITIAL_PITCH       = 0.0f;
+constexpr float INITIAL_SPEED       = 4.5f;
+constexpr float INITIAL_SENSITIVITY = 0.1f;
 
 class Camera {
 public:
@@ -37,6 +37,8 @@ public:
     void updateCoordinateSystem();
     void translate(Direction direction);
     void processMouseOffsets(float xoffset, float yoffset);
+    void setSensitivity(float newSensitivity);
+    void setMovementSpeed(float newSpeed);
     glm::mat4x4 getViewMatrix();
 };
 

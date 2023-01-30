@@ -45,3 +45,7 @@ void Window::SwapWindow() {
 SDL_GLContext Window::getSDL_GLContext() {
     return m_glContext;
 }
+
+void Window::setWindowGrab(SDL_bool grabbed) {
+    SDL_SetWindowGrab(m_window_ptr, grabbed); 
+}

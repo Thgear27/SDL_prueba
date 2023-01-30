@@ -138,6 +138,8 @@ void CreateVertexSpecification(VertexArray& vao, VertexBuffer& vbo, ElementBuffe
     texture2d1.setTextureUnit(0);
     texture2d2.setTextureUnit(1);
 
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+
     vbo.loadData(sizeof(vertices), vertices, GL_STATIC_DRAW);
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 3);
     vbo.push_VertexAttribLayout(GL_FLOAT, GL_FALSE, 2);
@@ -176,17 +178,27 @@ void Draw(VertexArray& vao_obj, int size) {
 }
 
 void handleInput(Camera& camera) {
+    int xpos, ypos;
+    SDL_GetRelativeMouseState(&xpos, &ypos);
+
     if (keyState[SDL_SCANCODE_W] == 1) camera.translate(Camera::Direction::FRONT);
     if (keyState[SDL_SCANCODE_S] == 1) camera.translate(Camera::Direction::BACK);
     if (keyState[SDL_SCANCODE_A] == 1) camera.translate(Camera::Direction::LEFT);
     if (keyState[SDL_SCANCODE_D] == 1) camera.translate(Camera::Direction::RIGTH);
     if (keyState[SDL_SCANCODE_LSHIFT] == 1) camera.translate(Camera::Direction::DOWN);
     if (keyState[SDL_SCANCODE_SPACE] == 1) camera.translate(Camera::Direction::UP);
+    if (keyState[SDL_SCANCODE_LCTRL] == 1) {
+        camera.setMovementSpeed(10.0f);
+    } else {
+        camera.setMovementSpeed(INITIAL_SPEED);
+    }
 
-    if (keyState[SDL_SCANCODE_UP] == 1) camera.processMouseOffsets(0, 10);
-    if (keyState[SDL_SCANCODE_RIGHT] == 1) camera.processMouseOffsets(10, 0);
-    if (keyState[SDL_SCANCODE_LEFT] == 1) camera.processMouseOffsets(-10, 0);
-    if (keyState[SDL_SCANCODE_DOWN] == 1) camera.processMouseOffsets(0, -10);
+    camera.processMouseOffsets(xpos, -ypos);
+
+    // if (keyState[SDL_SCANCODE_UP] == 1) camera.processMouseOffsets(0, 10);
+    // if (keyState[SDL_SCANCODE_RIGHT] == 1) camera.processMouseOffsets(10, 0);
+    // if (keyState[SDL_SCANCODE_LEFT] == 1) camera.processMouseOffsets(-10, 0);
+    // if (keyState[SDL_SCANCODE_DOWN] == 1) camera.processMouseOffsets(0, -10);
 
     if (keyState[SDL_SCANCODE_R] == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     if (keyState[SDL_SCANCODE_E] == 1) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -195,9 +207,10 @@ void handleInput(Camera& camera) {
 bool IsGameRunning(Window& window, VertexArray& vao, Camera& camera) {
     static float lastFrame    = 0.0f;
     static float currentFrame = SDL_GetTicks64();
-    currentFrame              = SDL_GetTicks64();
-    deltaTime                 = (currentFrame - lastFrame) / 1000;
-    lastFrame                 = currentFrame;
+
+    currentFrame = SDL_GetTicks64();
+    deltaTime    = (currentFrame - lastFrame) / 1000;
+    lastFrame    = currentFrame;
 
     SDL_Event event;
     while (SDL_PollEvent(&event)) {

@@ -25,6 +25,8 @@ public:
     void SwapWindow();
 
     SDL_GLContext getSDL_GLContext();
+
+    void setWindowGrab(SDL_bool grabbed);
 };
 
 #endif // WINDOW_HPP

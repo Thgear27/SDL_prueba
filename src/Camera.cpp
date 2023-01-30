@@ -9,8 +9,8 @@ Camera::Camera(const glm::vec3& position) {
 
     m_yaw              = INITIAL_YAW;
     m_pitch            = INITIAL_PITCH;
-    m_movementSpeed    = SPEED;
-    m_mouseSensitivity = SENSITIVITY;
+    m_movementSpeed    = INITIAL_SPEED;
+    m_mouseSensitivity = INITIAL_SENSITIVITY;
     updateCoordinateSystem();
 }
 
@@ -46,6 +46,14 @@ void Camera::processMouseOffsets(float xoffset, float yoffset) {
     if (m_pitch > 89.0f) m_pitch = 89.0f;
     if (m_pitch < -89.0f) m_pitch = -89.0f;
     updateCoordinateSystem();
+}
+
+void Camera::setSensitivity(float newSensitivity) {
+    m_mouseSensitivity = newSensitivity; 
+}
+
+void Camera::setMovementSpeed(float newSpeed) {
+    m_movementSpeed = newSpeed; 
 }
 
 glm::mat4x4 Camera::getViewMatrix() {
