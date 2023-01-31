@@ -53,6 +53,10 @@ void Camera::setSensitivity(float newSensitivity) { m_mouseSensitivity = newSens
 
 void Camera::setMovementSpeed(float newSpeed) { m_movementSpeed = newSpeed; }
 
+void Camera::printPosition() {
+    std::cout << "Position( " << "x: " << m_position.x << " y: " << m_position.y << " z: " << m_position.z << " )\n";
+}
+
 glm::mat4x4 Camera::getViewMatrix() {
     return glm::lookAt(m_position, m_position + m_direction, glm::vec3 { 0.0f, 1.0f, 0.0f });
 }
