@@ -166,7 +166,8 @@ void PrintRenderInformation() {
 void CleanUp() {}
 
 void PreDraw() {
-    GLCall(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+    // GLCall(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+    GLCall(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
     GLCall(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
 }
 
@@ -227,7 +228,7 @@ bool IsGameRunning(Window& window, VertexArray& vao, Camera& camera) {
     float n = SDL_GetTicks() / 1000.0f;
 
     glm::mat projection = glm::mat4 { 1.0f };
-    projection          = glm::perspective(glm::radians(70.0f), 800.0f / 600.0f, 0.3f, 100.0f);
+    projection          = glm::perspective(glm::radians(80.0f), 800.0f / 600.0f, 0.3f, 100.0f);
 
     // // glm::mat view  = glm::lookAt(glm::vec3 { 0, -1.0f, 0 }, glm::vec3 { 0, 0, 0 }, glm::vec3 { 0, 1.0f, 0 });
     // glm::mat4 view = glm::mat4 { 1.0f };
