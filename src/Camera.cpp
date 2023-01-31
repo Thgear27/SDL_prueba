@@ -28,8 +28,9 @@ void Camera::updateCoordinateSystem() {
 }
 
 void Camera::translate(Direction direction) {
-    if (direction == Direction::FRONT) m_position += (m_direction * m_movementSpeed * deltaTime);
-    if (direction == Direction::BACK) m_position -= (m_direction * m_movementSpeed * deltaTime);
+    glm::vec3 newFront = glm::normalize(glm::vec3 { m_direction.x, 0.0f, m_direction.z });
+    if (direction == Direction::FRONT) m_position += (newFront * m_movementSpeed * deltaTime);
+    if (direction == Direction::BACK) m_position -= (newFront * m_movementSpeed * deltaTime);
     if (direction == Direction::RIGTH) m_position += (m_rightAxis * m_movementSpeed * deltaTime);
     if (direction == Direction::LEFT) m_position -= (m_rightAxis * m_movementSpeed * deltaTime);
     if (direction == Direction::UP) m_position += (glm::vec3 { 0.0f, 1.0f, 0.0f } * m_movementSpeed * deltaTime);
@@ -48,13 +49,9 @@ void Camera::processMouseOffsets(float xoffset, float yoffset) {
     updateCoordinateSystem();
 }
 
-void Camera::setSensitivity(float newSensitivity) {
-    m_mouseSensitivity = newSensitivity; 
-}
+void Camera::setSensitivity(float newSensitivity) { m_mouseSensitivity = newSensitivity; }
 
-void Camera::setMovementSpeed(float newSpeed) {
-    m_movementSpeed = newSpeed; 
-}
+void Camera::setMovementSpeed(float newSpeed) { m_movementSpeed = newSpeed; }
 
 glm::mat4x4 Camera::getViewMatrix() {
     return glm::lookAt(m_position, m_position + m_direction, glm::vec3 { 0.0f, 1.0f, 0.0f });
